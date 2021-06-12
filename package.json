@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "npm run server",
-    "server": "node server.js",
+    "server": "node server_ssl.js",
     "server_ssl": "node server_ssl.js",
     "docker:build": "docker build -t easyrtc-server -f Dockerfile .",
     "docker:start": "docker run -it -d -p 8080:8080 easyrtc-server",
