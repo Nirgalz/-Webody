@@ -6,13 +6,7 @@
   "private": true,
   "scripts": {
     "start": "npm run server",
-    "server": "node server.js",
-    "server_ssl": "node server_ssl.js",
-    "docker:build": "docker build -t easyrtc-server -f Dockerfile .",
-    "docker:start": "docker run -it -d -p 8080:8080 easyrtc-server",
-    "docker-compose:build": "docker-compose -f docker-compose.yml build",
-    "docker-compose:start": "docker-compose -f docker-compose.yml up",
-    "docker-compose:stop": "docker-compose -f docker-compose.yml down"
+    "server": "node server.js"
   },
   "dependencies": {
     "express": "^4.17.1",
