@@ -1,0 +1,11 @@
+---
+application:
+  name: "webody"
+  project: "webody"
+  organization: "QoveryCommunity"
+routers:
+- name: "main-webody"
+  routes:
+  - application_name: "webody"
+    paths:
+    - "/*"
