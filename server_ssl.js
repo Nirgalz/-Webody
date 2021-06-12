@@ -9,8 +9,9 @@ var easyrtc = require("open-easyrtc"); // EasyRTC internal module
 var httpApp = express();
 httpApp.use(express.static(__dirname + "/static/"));
 
+var port = process.env.PORT || 8080;
 // Start Express https server on port 8443
-var webServer = https.createServer(httpApp);
+var webServer = https.createServer(httpApp).listen(port);
 
 // Start Socket.io so it attaches itself to Express server
 var socketServer = io.listen(webServer, {"log level":1});
@@ -19,6 +20,6 @@ var socketServer = io.listen(webServer, {"log level":1});
 var rtc = easyrtc.listen(httpApp, socketServer);
 
 // Listen on port 8443
-webServer.listen(process.env.PORT || 8443, function () {
-    console.log('listening on https://localhost:8443');
+webServer.listen(8080, function () {
+    console.log('listening on https://localhost:'+port);
 });
