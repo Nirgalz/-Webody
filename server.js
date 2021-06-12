@@ -3,12 +3,6 @@ var http    = require("http");              // http server core module
 var express = require("express");           // web framework external module
 var serveStatic = require('serve-static');  // serve static files
 var socketIo = require("socket.io");        // web socket external module
-
-// This sample is using the easyrtc from parent folder.
-// To use this server_example folder only without parent folder:
-// 1. you need to replace this "require("../");" by "require("open-easyrtc");"
-// 2. install easyrtc (npm i open-easyrtc --save) in server_example/package.json
-
 var easyrtc = require("open-easyrtc"); // EasyRTC internal module
 
 // Set process name
@@ -18,6 +12,7 @@ process.title = "node-easyrtc";
 var app = express();
 app.use(serveStatic('static', {'index': ['index.html']}));
 
+var port = process.env.PORT || 8080;
 // Start Express http server on port 8080
 var webServer = http.createServer(app);
 
@@ -60,6 +55,6 @@ var rtc = easyrtc.listen(app, socketServer, null, function(err, rtcRef) {
 });
 
 // Listen on port 8080
-webServer.listen(8080, function () {
+webServer.listen(port, function () {
     console.log('listening on http://localhost:8080');
 });
