@@ -9,7 +9,7 @@ var io      = require("socket.io"); // web socket external module
 // 1. you need to replace this "require("../");" by "require("open-easyrtc");"
 // 2. install easyrtc (npm i open-easyrtc --save) in server_example/package.json
 
-var easyrtc = require("../"); // EasyRTC internal module
+var easyrtc = require("open-easyrtc"); // EasyRTC internal module
 
 // Setup and configure Express http server. Expect a subfolder called "static" to be the web root.
 var httpApp = express();
