@@ -4,9 +4,25 @@ $(document).ready(() => {
     $(document).on('mousemove', function (e) {
         $('#my-body').css({top: e.clientY, left: e.clientX});
 
-        easyrtc.sendDataWS({targetRoom: "default"}, "message", JSON.stringify({
+        easyrtc.sendDataWS({targetRoom: "default"}, messageType.MOUSE_POSITION, JSON.stringify({
             clientX: e.clientX,
             clientY: e.clientY
+        }), null);
+    });
+
+    $(window).bind('mousewheel DOMMouseScroll', function(event){
+        if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
+            let smileyIcon = $('#my-body').find(".smiley");
+            smileyIcon.removeClass(smileys[smileyIndex]).addClass(smileys[smileyIndex +1] )
+            smileyIndex === smileys.length ? smileyIndex = 0 : smileyIndex += 1;
+        }
+        else {
+            let smileyIcon = $('#my-body').find(".smiley");
+            smileyIcon.removeClass(smileys[smileyIndex]).addClass(smileys[smileyIndex-1] );
+            smileyIndex === 0 ? smileyIndex = smileys.length : smileyIndex -= 1;
+        }
+        easyrtc.sendDataWS({targetRoom: "default"}, messageType.CHANGE_SMILEY, JSON.stringify({
+            smileyIndex: smileyIndex
         }), null);
     });
 
@@ -14,13 +30,33 @@ $(document).ready(() => {
 
 });
 
-var selfEasyrtcid = "";
-var webodies = {};
+const messageType = {
+    MOUSE_POSITION: "mousePosition",
+    CHANGE_SMILEY: "changeSmiley",
+    MESSAGE: "message"
+}
+let smileyIndex = 0;
 
-function mousePosition(who, msgType, content) {
+const smileys = [
+    "fa-smile", "fa-smile-beam", "fa-smile-wink", "fa-grin-squint-tears", "fa-grin-squint", "fa-grin-hearts", "fa-grin-beam-sweat", "fa-grin", "fa-laugh-wink", "fa-laugh-squint", "fa-sad-tear", "fa-sad-cry", "fa-frown"
+]
+
+let selfEasyrtcid = "";
+let webodies = {};
+
+function userListener(who, msgType, content) {
     // console.log(who + " " + msgType + " " + content);
-    var position = JSON.parse(content);
-    $('#' + who).css({top: position.clientY, left: position.clientX});
+    var data = JSON.parse(content);
+
+    if (msgType === messageType.MOUSE_POSITION) {
+        $('#' + who).css({top: data.clientY, left: data.clientX});
+    }
+    if (msgType === messageType.CHANGE_SMILEY) {
+        let smileyIcon = $('#' + who).find(".smiley");
+        let smileyClass = smileyIcon.attr('class').split(/\s+/)[2];
+        smileyIcon.removeClass(smileyClass).addClass(smileys[data.smileyIndex])
+    }
+
 }
 
 //joins a room
@@ -36,7 +72,7 @@ function connectToRoom(roomName) {
 
 function connect(immediateMode) {
     connectToRoom("default");
-    easyrtc.setPeerListener(mousePosition);
+    easyrtc.setPeerListener(userListener);
     easyrtc.setRoomOccupantListener(occupantsListener);
 
     var mysocket = io.connect(null, {
@@ -67,7 +103,7 @@ function occupantsListener(roomName, occupants, isPrimary) {
             webodies[key] = '';
             $('#webodies-div').append(
                 `<span class="webody" style="font-size: 48px; color: #${intToRGB(occupants[key].roomJoinTime)}; position: absolute" id="${key}">
-<i class="far fa-smile"></i>
+<i class="smiley far fa-smile"></i>
 </span>`);
         }
     }
