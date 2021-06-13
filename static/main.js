@@ -1,14 +1,44 @@
 'use strict';
 
+const messageType = {
+    MOUSE_POSITION: "mousePosition",
+    CHANGE_SMILEY: "changeSmiley",
+    MESSAGE: "message",
+    DRAWING: "drawing"
+}
+let smileyIndex = 0;
+
+const smileys = [
+    "fa-smile", "fa-smile-beam", "fa-smile-wink", "fa-grin-squint-tears", "fa-grin-squint", "fa-grin-hearts", "fa-grin-beam-sweat", "fa-grin", "fa-laugh-wink", "fa-laugh-squint", "fa-sad-tear", "fa-sad-cry", "fa-frown"
+]
+
+let selfEasyrtcid = "";
+let webodies = {};
+let mousePosition = {}
+let mouseDown = false;
+
 $(document).ready(() => {
     $(document).on('mousemove', function (e) {
+        mousePosition = {x: e.clientX, y: e.clientY};
         $('#my-body').css({top: e.clientY, left: e.clientX});
 
         easyrtc.sendDataWS({targetRoom: "default"}, messageType.MOUSE_POSITION, JSON.stringify({
             clientX: e.clientX,
             clientY: e.clientY
         }), null);
+        if (mouseDown) {
+            $('#drawings').append(`<div class="pixel" style="background-color: #dede8a; left: ${mousePosition.x}px; top: ${mousePosition.y}px;">`)
+            easyrtc.sendDataWS({targetRoom: "default"}, messageType.DRAWING, JSON.stringify(mousePosition), null);
+        }
     });
+
+    $(document).on('mousedown', function () {
+        mouseDown = true;
+    })
+
+    $(document).on('mouseup', function () {
+        mouseDown = false;
+    })
 
     $(window).bind('mousewheel DOMMouseScroll', function(event){
         if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
@@ -30,22 +60,7 @@ $(document).ready(() => {
 
 });
 
-const messageType = {
-    MOUSE_POSITION: "mousePosition",
-    CHANGE_SMILEY: "changeSmiley",
-    MESSAGE: "message"
-}
-let smileyIndex = 0;
-
-const smileys = [
-    "fa-smile", "fa-smile-beam", "fa-smile-wink", "fa-grin-squint-tears", "fa-grin-squint", "fa-grin-hearts", "fa-grin-beam-sweat", "fa-grin", "fa-laugh-wink", "fa-laugh-squint", "fa-sad-tear", "fa-sad-cry", "fa-frown"
-]
-
-let selfEasyrtcid = "";
-let webodies = {};
-
 function userListener(who, msgType, content) {
-    // console.log(who + " " + msgType + " " + content);
     var data = JSON.parse(content);
 
     if (msgType === messageType.MOUSE_POSITION) {
@@ -55,6 +70,9 @@ function userListener(who, msgType, content) {
         let smileyIcon = $('#' + who).find(".smiley");
         let smileyClass = smileyIcon.attr('class').split(/\s+/)[2];
         smileyIcon.removeClass(smileyClass).addClass(smileys[data.smileyIndex])
+    }
+    if (msgType === messageType.DRAWING) {
+        $('#drawings').append(`<div class="pixel" style="background-color: ${webodies[who].color}; left: ${data.x}px; top: ${data.y}px;">`)
     }
 
 }
@@ -100,9 +118,9 @@ function occupantsListener(roomName, occupants, isPrimary) {
     console.log(occupants)
     for (const key in occupants) {
         if (!webodies[key]) {
-            webodies[key] = '';
+            webodies[key] = {color: "#" + intToRGB(occupants[key].roomJoinTime)};
             $('#webodies-div').append(
-                `<span class="webody" style="font-size: 48px; color: #${intToRGB(occupants[key].roomJoinTime)}; position: absolute" id="${key}">
+                `<span class="webody" style="font-size: 48px; color:  ${webodies[key].color}; position: absolute" id="${key}">
 <i class="smiley far fa-smile"></i>
 </span>`);
         }
