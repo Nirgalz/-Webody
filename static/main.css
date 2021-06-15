@@ -12,3 +12,13 @@ body {
     width: 2px;
     height: 2px;
 }
+
+.speech-area {
+    background-color: #dede8a;
+    font-family: Verdana, sans-serif;
+}
+
+.speech {
+    position: absolute;
+    font-size: 20px;
+}

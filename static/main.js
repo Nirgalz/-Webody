@@ -16,6 +16,7 @@ let selfEasyrtcid = "";
 let webodies = {};
 let mousePosition = {}
 let mouseDown = false;
+let isSpeechBoxOff = true;
 
 $(document).ready(() => {
     $(document).on('mousemove', function (e) {
@@ -40,15 +41,34 @@ $(document).ready(() => {
         mouseDown = false;
     })
 
-    $(window).bind('mousewheel DOMMouseScroll', function(event){
+    $(document).on('keyup', function (e) {
+        if (e.which === 13 && e.ctrlKey) {
+            if (isSpeechBoxOff) {
+                $('#my-body').append('<textarea id="my-speech"  class="speech-area" rows="4" cols="50"></textarea>');
+                $('#my-speech').focus();
+            } else {
+                let mySpeech = $('#my-speech');
+                let myBodyPosition = $('#my-body').position();
+                $('#speeches').append(`<p class="speech" style="color: #dede8a; top: ${myBodyPosition.top}px; left: ${myBodyPosition.left}px;">${mySpeech.val()}</p>`)
+                mySpeech.remove();
+                let data = {
+                    position: myBodyPosition,
+                    content: mySpeech.val()
+                }
+                easyrtc.sendDataWS({targetRoom: "default"}, messageType.MESSAGE, JSON.stringify(data), null);
+            }
+            isSpeechBoxOff = !isSpeechBoxOff;
+        }
+    })
+
+    $(window).bind('mousewheel DOMMouseScroll', function (event) {
         if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
             let smileyIcon = $('#my-body').find(".smiley");
-            smileyIcon.removeClass(smileys[smileyIndex]).addClass(smileys[smileyIndex +1] )
+            smileyIcon.removeClass(smileys[smileyIndex]).addClass(smileys[smileyIndex + 1])
             smileyIndex === smileys.length ? smileyIndex = 0 : smileyIndex += 1;
-        }
-        else {
+        } else {
             let smileyIcon = $('#my-body').find(".smiley");
-            smileyIcon.removeClass(smileys[smileyIndex]).addClass(smileys[smileyIndex-1] );
+            smileyIcon.removeClass(smileys[smileyIndex]).addClass(smileys[smileyIndex - 1]);
             smileyIndex === 0 ? smileyIndex = smileys.length : smileyIndex -= 1;
         }
         easyrtc.sendDataWS({targetRoom: "default"}, messageType.CHANGE_SMILEY, JSON.stringify({
@@ -62,19 +82,23 @@ $(document).ready(() => {
 
 function userListener(who, msgType, content) {
     var data = JSON.parse(content);
-
-    if (msgType === messageType.MOUSE_POSITION) {
-        $('#' + who).css({top: data.clientY, left: data.clientX});
+    let whoDiv = $(`#${who}`);
+    switch (msgType) {
+        case messageType.MOUSE_POSITION:
+            whoDiv.css({top: data.clientY, left: data.clientX});
+            break;
+        case messageType.CHANGE_SMILEY:
+            let smileyIcon = whoDiv.find(".smiley");
+            let smileyClass = smileyIcon.attr('class').split(/\s+/)[2];
+            smileyIcon.removeClass(smileyClass).addClass(smileys[data.smileyIndex]);
+            break;
+        case  messageType.DRAWING:
+            $('#drawings').append(`<div class="pixel" style="background-color: ${webodies[who].color}; left: ${data.x}px; top: ${data.y}px;">`);
+            break;
+        case messageType.MESSAGE:
+            $('#speeches').append(`<p class="speech" style="color: ${webodies[who].color}; top: ${data.position.top}px; left: ${data.position.left}px;">${data.content}</p>`)
+            break;
     }
-    if (msgType === messageType.CHANGE_SMILEY) {
-        let smileyIcon = $('#' + who).find(".smiley");
-        let smileyClass = smileyIcon.attr('class').split(/\s+/)[2];
-        smileyIcon.removeClass(smileyClass).addClass(smileys[data.smileyIndex])
-    }
-    if (msgType === messageType.DRAWING) {
-        $('#drawings').append(`<div class="pixel" style="background-color: ${webodies[who].color}; left: ${data.x}px; top: ${data.y}px;">`)
-    }
-
 }
 
 //joins a room
